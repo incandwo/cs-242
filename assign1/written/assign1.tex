@@ -29,54 +29,99 @@
 \begin{document}
 
 \hwtitle
-  {Assignment 1}
-  {Will Crichton (wcrichto)} %% REPLACE THIS WITH YOUR NAME/ID
+  {Assignment 1 resubmit}
+  {Breno Dal Bianco (bdbianco)}
 
-\problem{Problem 1}
-
-Part 1:
-
-\begin{alignat*}{1}
-\msf{Property}~p ::= \qamp \varepsilon \\
-\mid \qamp \ldots \\
-\\
-\msf{Schema}~\tau ::= \qamp \tnum \prop{p} \\
-\mid \qamp \ldots
-\end{alignat*}
-
-Part 2:
-
-% mathpar is the environment for writing inference rules. It takes care of
-% the spacing and line breaks automatically. Use "\\" in the premises to
-% space out multiple assumptions.
-\begin{mathpar}
-
-\ir{S-Bool-False}{\ }{\matches{\falset}{\tbool}}
-
-\ir{S-Bool-True}{\ }{\matches{\truet}{\tbool}}
-
-% Inference rules go here
-
-\end{mathpar}
+I am only typing Problem 2 Part 2 since I got full marks on the other parts, 
+but I've attached them for reference.
 
 \problem{Problem 2}
 
-Part 1:
-
-\begin{mathpar}
-% Inference rules go here
-\end{mathpar}
-
 Part 2:
 
 \begin{mathpar}
-% Inference rules go here
+\ir{A-Val-Ep}{\ }{\matches{\aeps}{\tau}}
+
+\ir{A-Val-Dict}
+    {\matches{a}{\tau'}}
+    {\matches{\akey{s}{a}}{\jobj{(s: \tau')*}}}
+
+\ir{A-Val-Arr}
+    {\matches{a}{\tau'}}
+    {\matches{\jarr{n}a}{\jarr{\tau'}}}
+
+\ir{A-Val-Pipe}
+    {\matches{a}{\tau'}}
+    {\matches{\apipe{a}}{\jarr{\tau'}}}
+
 \end{mathpar}
 
-\textit{Accessor safety}: for all $a, j, \tau$, if $\matches{a}{\tau}$ and $\matches{j}{\tau}$, then there exists a $j'$ such that $\evals{(a, j)}{\aeps, j'}$.
+\textit{Accessor safety}: for all $a, j, \tau$, if $\matches{a}{\tau}$ and $\matches{j}{\tau}$, then there exists a $j'$ such that $\evals{(a, j)}{(\aeps, j')}$.
 
 \begin{proof}
-% Proof goes here.
+
+Let $P(a) =$ for all $j, \tau$, if $\matches{a}{\tau}$ and $\matches{j}{\tau}$, then there exists a $j'$ such that $\evals{(a, j)}{(\aeps, j')}$.
+
+First we will prove the base case $P(\aeps)$. Pick $j' = j$. Trivially, we have that $\evals{(\aeps, j)}{(\aeps, j')}$ in zero steps.
+
+Now we will proceed by case, proving $P(a) \rightarrow P(\akey{s}{a})$, 
+$P(a) \rightarrow P(\jarr{n}a)$, and $P(a) \rightarrow P(\apipe{a})$.
+
+\begin{enumerate}
+\item Assume $P(a)$. Pick an arbitrary acessor of the form $\akey{s}{a}$, an object
+$j$ and a schema $\tau$ such that $\matches{\akey{s}{a}}{\tau}$ and $\matches{j}{\tau}$.
+By inversion of A-Val-Dict, we have $\tau = \jobj{(s: \overline{\tau})*}$ and 
+$\matches{a}{\overline{\tau}}$. Similarly, by inversion of S-Dict, since 
+$\matches{j}{\jobj{(s: \overline{\tau})*}}$, then $j = \jobj{(s: \overline{j})*}$ and
+$\matches{\overline{j}}{\overline{\tau}}$. 
+
+So, we can see that 
+$\steps{(\akey{s}{a}, j)}{(a, \overline{j})}$. Now, since $\matches{a}{\overline{\tau}}$ 
+and $\matches{\overline{j}}{\overline{\tau}}$, then by $P(a)$ there is a $j'$ such that
+$\evals{(a, \overline{j})}{(\aeps, j')}$. 
+
+Thus, we have shown that
+$\evals{(\akey{s}{a}, j)}{(\aeps, j')}$, so $P(a) \rightarrow P(\akey{s}{a})$.
+
+\item Assume $P(a)$. Pick an arbitrary acessor of the form $\jarr{n}a$, an object
+$j$ and a schema $\tau$ such that $\matches{\jarr{n}a}{\tau}$ and $\matches{j}{\tau}$.
+By inversion of A-Val-Arr, we have $\tau = \jarr{\overline{\tau}}$ and 
+$\matches{a}{\overline{\tau}}$. Similarly, by inversion of S-List, since 
+$\matches{j}{\jarr{\overline{\tau}}}$, then $j = \jarr{~\overline{j}*}$ and
+$\matches{\overline{j}}{\overline{\tau}}$. 
+
+So, we can see that 
+$\steps{(\jarr{n}a, j)}{(a, \overline{j})}$. Now, since $\matches{a}{\overline{\tau}}$ 
+and $\matches{\overline{j}}{\overline{\tau}}$, then by $P(a)$ there is a $j'$ such that 
+$\evals{(a, \overline{j})}{(\aeps, j')}$.
+
+Thus, we have shown that
+$\evals{(\jarr{n}a, j)}{(\aeps, j')}$, so $P(a) \rightarrow P(\jarr{n}a)$.
+
+\item Assume $P(a)$. Pick an arbitrary acessor of the form $\apipe{a}$, an object
+$j$ and a schema $\tau$ such that $\matches{\apipe{a}}{\tau}$ and $\matches{j}{\tau}$.
+By inversion of A-Val-Pipe, we have $\tau = \jarr{\overline{\tau}}$ and 
+$\matches{a}{\overline{\tau}}$. Similarly, by inversion of S-List, since 
+$\matches{j}{\jarr{\overline{\tau}}}$, then $j = \jarr{~\overline{j}*}$ and
+$\matches{\overline{j}}{\overline{\tau}}$. 
+
+Since $\matches{a}{\overline{\tau}}$ and $\matches{\overline{j}}{\overline{\tau}}$, then 
+by $P(a)$ there is a $j'$ such that $\evals{(a, \overline{j})}{(\aeps, j')}$ in $k$ steps.
+
+Therefore, we can apply A-pipe $k$ times and we get 
+$\evals{(\apipe{a}, \jarr{~\overline{j}*})}{(\apipe{a_k}, \overline{j_k})}$ with 
+$a_k = \aeps$. At this point, all that is left is to apply A-pipe-epsilon to get rid of the pipe operator and we get 
+$\steps{(\apipe{a_k}, \overline{j_k})}{(\aeps, \overline{j_k})}$.
+
+Thus, we have shown that
+$\evals{(\apipe{a}, j)}{(\aeps, j')}$, so $P(a) \rightarrow P(\apipe{a})$.
+\end{enumerate}{}
+
+We have proven $P(a) \rightarrow P(\akey{s}{a})$, 
+$P(a) \rightarrow P(\jarr{n}a)$, and $P(a) \rightarrow P(\apipe{a})$, which cover all
+of our accessor grammar, so we've shown $P(a)$ holds for all any accessor $a$, as
+intended.
+
 \end{proof}
 
 \end{document}

@@ -6,10 +6,9 @@
 
 \hwtitle
   {Assignment 2}
-  {Will Crichton (wcrichto)} %% REPLACE THIS WITH YOUR NAME/ID
+  {Breno Dal Bianco (bdbianco)} %% REPLACE THIS WITH YOUR NAME/ID
 
 \problem{Problem 2}
-
 \textbf{Part 1:}
 
 \begin{mathpar}
@@ -27,68 +26,201 @@
   {\dynJ{\varnothing}{\steps
     {\app{(\fun{x}{\app{\app{(\fun{x}{\fun{\_}{x}})}{L}}{*}})}{D}}
     {\app{(\fun{x}{\app{(\fun{\_}{x})}{*}})}{D}}}}
-\end{mathpar}
 
-Fill in the remaining steps here.
+\text{Step 2:}\qquad
+\ir{D-App-Body}
+  {\ir{D-App-Body}
+    {\ir{D-Var}
+      {\ir{Set Theory}{ \ }{\steps x D \in \{x \rightarrow D, \_ \rightarrow *\}{}}
+      }
+      {\dynJ{\{x \rightarrow D, \_ \rightarrow *\}}{\steps
+        x
+        D
+        }}}
+    {\dynJ{\{x \rightarrow D\}}{\steps
+      {\app{(\fun{\_}{x})}{*}}
+      {\app{(\fun{\_}{D})}{*}}
+      }}}
+  {\dynJ{\varnothing}{\steps
+    {\app{(\fun{x}{\app{(\fun{\_}{x})}{*}})}{D}}
+    {\app{(\fun{x}{\app{(\fun{\_}{D})}{*}})}{D}}
+    }}
+
+\text{Step 3:}\qquad
+\ir{D-App-Body}
+  {\ir{D-App-Done}
+    {\ir{D-Val}
+      {\ }
+      {\val{D}}}
+    {\dynJ{\{x \rightarrow D\}}{\steps
+      {\app{(\fun{\_}{D})}{*}}
+      D
+      }}}
+  {\dynJ{\varnothing}{\steps
+    {\app{(\fun{x}{\app{(\fun{\_}{D})}{*}})}{D}}
+    {\app{(\fun{x}{D})}{D}}
+    }}
+
+\text{Step 4:}\qquad
+  \ir{D-App-Done}
+    {\ir{D-Val}
+      {\ }
+      {\val{D}}}
+    {\dynJ{\varnothing}{\steps
+      {\app{(\fun{x}{D})}{D}}
+      D
+    }}
+
+\end{mathpar}
 
 \textbf{Part 2:}
 
-Here's examples of how to LaTeX the existing dynamically-scoped lambda calculus rules. Delete them before you submit.
+To do this, we'll rewrite D-App-Body and D-App-Done to provide the same functionality for the let construct.
 
 \begin{mathpar}
-\ir{D-Lam}{ \ }{\val{\fun{x}{e}}}
-
-\ir{D-Var}
-  {x \rightarrow e \in \ctx}
-  {\dynJC{\steps{x}{e}}}
-
-\ir{D-App-Lam}
-  {\dynJC{\steps{e_\msf{lam}}{e_\msf{lam}'}}}
-  {\dynJC{\steps{\app{e_\msf{lam}}{e_\msf{arg}}}{\app{e_\msf{lam}'}{e_\msf{arg}}}}}
 
 \ir{D-App-Body}
-  {\dynJ{\ctx, x \rightarrow e_\msf{arg}}{\steps{e_\msf{body}}{e_\msf{body}'}}}
-  {\dynJC{\steps{\app{(\fun{x}{e_\msf{body}})}{e_\msf{arg}}}{\app{(\fun{x}{e_\msf{body}'})}{e_\msf{arg}}}}} \s
+  {\dynJ{\ctx, x \rightarrow e_\msf{var}} {\steps{e_\msf{body}}{e_\msf{body}'}}}
+  {\dynJC{
+    \steps
+    {\msf{let} ~ x = {e_\msf{var}} ~ \msf{in} ~ {e_\msf{body}}}
+    {\msf{let} ~ x = {e_\msf{var}} ~ \msf{in} ~ {e_\msf{body}'}}
+  }} \s
 
 \ir{D-App-Done}
   {\val{e_\msf{body}}}
-  {\dynJC{\steps{\app{(\fun{x}{e_\msf{body}})}{e_\msf{arg}}}{e_\msf{body}}}}
+  {\dynJC{
+    \steps
+      {\msf{let} ~ x = {e_\msf{var}} ~ \msf{in} ~ {e_\msf{body}}}
+      {e_\msf{body}}}}
+      
 \end{mathpar}
 
 \newpage
 
 \problem{Problem 3}
+\textbf{Part 1:}
 
-Here are examples using the let and rec syntax inside the provided inference rules. Delete them before you submit.
+D-Let violates preservation.
 
+$Proof.$
+Let $e = (\lett{x}{\msf{num}}{'hello'}{x})$. We can see that by D-Let, we can
+step this to $e' =\ 'hello'$. Preservation states that if $\steps{e}{e'}$ then $e$ and $e'$ must have the same type $\tau$. We can see that 
 \begin{mathpar}
-\ir{T-Let}{\typeJ{\ctx,\hasType{x}{\tau_\msf{var}}}{e_\msf{body}}{\tau_\msf{body}}}{\typeJC{(\lett{x}{\tau_\msf{var}}{e_\msf{var}}{e_\msf{body}})}{\tau_\msf{body}}} \\
-
-\ir{D-Let}{\ }{\steps{\lett{x}{\tau}{e_\msf{var}}{e_\msf{body}}}{\subst{x}{e_\msf{var}}{e_\msf{body}}}}
-
-\ir{T-Rec}
-  {\typeJC{e_\msf{arg}}{\tnum} \\ \typeJC{e_\msf{base}}{\tau} \\
-   \typeJ{\ctx,\hasType{x_\msf{num}}{\tnum},\hasType{x_\msf{acc}}{\tau}}{e_\msf{acc}}{\tau}}
-  {\typeJC{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_\msf{arg}}}{\tau}}
-
-\ir{D-Rec-Step}
-  {\steps{e}{e'}}
-  {\steps
-    {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e}}
-    {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e'}}}
-
-\ir{D-Rec-Base}
-  {\ }
-  {\steps
-    {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{0}}
-    {e_\msf{base}}}
-
-\ir{D-Rec-Dec}
-  {n >0}
-  {\steps
-    {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{n}}
-    {[x_\msf{num} \rightarrow n, x_\msf{acc} \rightarrow \rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{n-1}] \ e_\msf{acc}}}
+\ir{T-Var} { \ }
+{
+  \ir{T-Let}
+    {\typeJ{ \{\hasType{x}{\msf{num}\} }}{x}{\msf{num}}}
+    {\typeJ{\varnothing}{(\lett{x}{\msf{num}}{'hello'}{x})}{\msf{num}}}
+}
 \end{mathpar}
+so we have that $\hasType{e}{num}$. However, it is easy to see that $\hasType{e'}{\msf{string}}$. So we have that $\steps{e}{e'}$. but $e$ and $e'$ have different types, which violates preservation.
 
+The problem is D-Let does not enforce that $\hasType{e_\msf{var}}{\tau_{\msf{var}}}$.
+In the substitution above, if it were true that $\hasType{x}{\msf{num}}$, then preservation would be mantained. D-Let needs to require that we only substitute something for a variable which has the same type as the variable.
+
+\textbf{Part 2.1:}
+
+We will prove preservation holds for $\msf{rec}$.
+
+$Proof.$ By rule induction on the dynamic semantics.
+
+\begin{enumerate}
+    \item D-Rec-Step: Assume 
+    $\hasType{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_\msf{arg}}}{\tau}$
+    and 
+    $\steps{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_\msf{arg}}}
+    {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_\msf{arg}'}}$
+    . 
+    This requires that $\steps{e_\msf{arg}}{e_\msf{arg}'}$. Then, from the IH and 
+    $\hasType{e_\msf{arg}}{\msf{num}}$, we know that $\hasType{e_\msf{arg}'}{\msf{num}}$. 
+    
+    Inverting T-Rec for 
+    $\hasType{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_\msf{arg}}}{\tau}$
+    yields $\hasType{e_\msf{arg}}{\msf{num}}$, $\hasType{e_\msf{base}}{\tau}$, and 
+    $\hasType{e_\msf{acc}}{\tau}$. Combining those with
+    $\hasType{e_\msf{arg}'}{\msf{num}}$ and reapplying T-Rec gives 
+    $\hasType{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_\msf{arg}'}}{\tau}$
+    which satisfies preservation.
+    
+    \item D-Rec-Base: Assume
+    $\hasType{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{0}}{\tau}$ and
+    $\steps{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{0}}{e_\msf{base}}$.
+    
+    Inverting T-Rec for
+    $\hasType{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{0}}{\tau}$
+    yields $\hasType{e_\msf{base}}{\tau}$, and thus preservation holds.
+    
+    \item D-Rec-Dec: Assume
+    $\hasType{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{n}}{\tau}$ and
+    $\steps
+      {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{n}}
+      {[x_\msf{num} \rightarrow n, x_\msf{acc} \rightarrow \rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{n-1}] \ e_\msf{acc}}$.
+    
+    Inverting T-Rec for
+    $\hasType{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{n}}{\tau}$
+    yields $\hasType{e_\msf{base}}{\tau}$ and $\hasType{e_\msf{acc}}{\tau}$.
+    
+    Then, since $\hasType{(n-1)}{\msf{num}}$ we can reapply T-Rec and get that
+    $\hasType{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{n-1}}{\tau}$.
+    
+    So we know $\hasType{n}{\msf{num}}$ and 
+    $\hasType{\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{n-1}}{\tau}$.
+    Then, by the substitution typing lemma, we can conclude that
+    $\hasType{{[x_\msf{num} \rightarrow n, x_\msf{acc} \rightarrow 
+    \rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{n-1}] \ e_\msf{acc}}}{\tau}$
+    , and thus preservation holds.
+
+\end{enumerate}{}
+
+Preservation therefore holds for all rules in the $\msf{rec}$ extension, 
+which is we wanted to prove. \qed
+
+\textbf{Part 2.2:}
+
+We will prove progress holds for $\msf{rec}$.
+
+$Proof.$ By rule induction on the static semantics.
+
+Assume $e = \rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_\msf{arg}}$
+and $\hasType{e}{\tau}$. Inverting T-Rec for $e$ yields 
+$\hasType{e_\msf{arg}}{\msf{num}}$, $\hasType{e_\msf{base}}{\tau}$, and 
+$\hasType{e_\msf{acc}}{\tau}$.
+
+We will now case on the possible rules that yield $\hasType{e_\msf{arg}}{\msf{num}}$.
+
+\begin{enumerate}
+    \item T-Num: For T-Num to apply, we must have that $e_\msf{arg} = n$. Then, either
+    $n = 0$ or $n \neq 0$.
+    
+    $n = 0$: In this case, we can apply D-Rec-Base and we have that
+    $\steps{e}{e_\msf{base}}$, so there is progress.
+    
+    $n \neq 0$: In this case, we can apply D-Rec-Dec 
+    and we have that $\steps{e}{[x_\msf{num} \rightarrow n, x_\msf{acc} \rightarrow \rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{n-1}] \ e_\msf{acc}}$,
+    so there is also progress.
+    
+    \item T-Binop: In this case $e_\msf{arg} = e_L \oplus e_R$ with 
+    $\hasType{e_L}{\msf{num}}$ and $\hasType{e_R}{\msf{num}}$, by inversion of T-Binop.
+    By the IH, can assume progress for $e_L$ and $e_R$. This gives us a few possibilities:
+    
+    $\steps{e_L}{e_L'}$: Then, by D-Binop-L, $\steps{e_\msf{arg}}{e_L' \oplus e_R}$, and we can can apply D-Rec-Step, so ${\steps
+    {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_\msf{arg}}}
+    {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_L' \oplus e_R}}}$ and there is progress.
+    
+    $\val{e_L}$ and $\steps{e_R}{e_R'}$: Then, by D-Binop-R, $\steps{e_\msf{arg}}{e_L \oplus e_R'}$, and we can can apply D-Rec-Step, so ${\steps
+    {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_\msf{arg}}}
+    {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_L \oplus e_R'}}}$ and there is progress.
+    
+    $\val{e_L}$ and $\val{e_R}$: Then, by inversion of D-Num we know $e_L = n_L$ and
+    $e_R = n_R$. Therefore, by D-Binop-Op $\steps{e_\msf{arg}}{n'}$ where 
+    $n' = n_L \oplus n_R$, and we can can apply D-Rec-Step, so ${\steps
+    {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{e_\msf{arg}}}
+    {\rec{e_\msf{base}}{x_\msf{num}}{x_\msf{acc}}{e_\msf{acc}}{n'}}}$ and there is progress.
+
+\end{enumerate}{}
+
+We've shown that there is progress in every case, so progress holds for $\msf{rec}$, 
+as desired. \qed
 
 \end{document}
