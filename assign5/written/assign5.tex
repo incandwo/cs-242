@@ -1,4 +1,5 @@
 \documentclass[11pt]{article}
+\usepackage{listings}
 
 \input{../../tex/defs.tex}
 
@@ -30,67 +31,148 @@
 
 \hwtitle
   {Assignment 5}
-  {Will Crichton (wcrichto)} %% REPLACE THIS WITH YOUR NAME/ID
-
-% Here's some complete examples of Latexing with WebAssembly.
-% Please delete this before submitting your homework.
-
-\begin{mathpar}
-\ir{D-Const}
-  {\ }
-  {\wsteps
-    {\wcs{:}~n^*; ~\wci{:}~(\wconst{n'}),e^*}
-    {\wcs{:}~n',n^*; ~\wci{:}~e^*}}
-
-\ir{D-Binop}
-  {n' = n_L~\oplus~n_R}
-  {\wsteps
-    {\wcs{:}~n_L,n_R; ~\wci{:}~\wbinop{\oplus}}
-    {\wcs{:}~n'}}
-
-\ir{D-Label-Step}
-  {\wsteps
-    {C~\with~\wci{:}~e_\msf{body}^*; ~\wcs{:}~n^*}
-    {C'~\with~\wci{:}~e_\msf{body}'^*; ~\wcs{:}~n'^*}}
-  {\wsteps
-    {C~\with~\wci{:}~\wlabel{e_\msf{cont}^*}{(n^*;~e_\msf{body}^*)}}
-    {C'~\with~\wci{:}~\wlabel{e_\msf{cont}^*}{(n'^*;~e_\msf{body}'^*)}}}
-
-\ir{T-Const}
-  {\ }
-  {\typeJC{\wconst{n}}{\tfun{\eps}{\msf{i32}}}}
-
-\ir{T-Binop}
-  {\ }
-  {\typeJC{\wbinop{\oplus}}{\tfun{\msf{i32}, \msf{i32}}{\msf{i32}}}}
-
-\ir{T-Loop}
-  {\typeJC{e^*}{\tfun{\eps}{\eps}}}
-  {\typeJC{\wloop{e^*}}{\tfun{\eps}{\eps}}}
-
-\ir{T-Block}
-  {\typeJC{e^*}{\tfun{\eps}{\eps}}}
-  {\typeJC{\wblock{e^*}}{\tfun{\eps}{\eps}}}
-\end{mathpar}
+  {Breno Dal Bianco (bdbianco)}
 
 \problem{Problem 2}
 
 Part 1:
 
 \begin{mathpar}
-% Your answer here
+
+\ir{T-If}
+  {\typeJC{e^*_{then}}{\tfun{\tau_1^*}{\tau_2^*}} ~~~~~~
+        \typeJC{e^*_{else}}{\tfun{\tau_1^*}{\tau_2^*}}}
+  {\typeJC{\wif{e^*_{then}}{e^*_{else}}}     {\tfun{\msf{i32},\tau_1^*}{\tau_2^*}}}
+
+\ir{D-If-Then}
+  {n \neq 0}
+  {\wsteps
+    {C ~\with~\wcs{:}~n^*,n';   ~\wci{:}~\wif{e^*_{then}}{e^*_{else}};\ e^*}
+    {C'~\with~\wcs{:}~n^*;      ~\wci{:}~e^*_{then};\ e^*}}
+
+\ir{D-If-Else}
+  {n = 0}
+  {\wsteps
+    {C ~\with~\wcs{:}~n^*,n';   ~\wci{:}~\wif{e^*_{then}}{e^*_{else}};\ e^*}
+    {C'~\with~\wcs{:}~n^*;      ~\wci{:}~e^*_{else};\ e^*}}
+
 \end{mathpar}
 
 Part 2:
 
+%I added a new $\msf{rpt}$ (repeat) administrative instruction for brevity (my dynamic rules were wider than the page). 
+For simplicity, the $\msf{for}$ loop body is not allowed to have branches. That is because a branch in the body would interact with the $\msf{loop}$ block added. This could be fixed with smarter, more complicated dynamic rules. 
+
+If one increases by one the De Bruijn indices of each branch inside the for loop, they would still branch to their original locations. Else, if one forces the indexes to be 0, then branches will behave as the $\msf{continue}$ keyword in C.
+
+\newcommand{\wrpt}[3]{\msf{rpt}~(\msf{cond}~{#1})~(\msf{post}~{#2})~{#3}}
 \begin{mathpar}
-% Your answer here
+
+\ir{T-For}
+  {\typeJC{e^*_{i}}\tfun{\eps}{\eps} ~~~
+        \typeJC{e^*_{c}}\tfun{\eps}{\msf{i32}} ~~~
+        \typeJC{e^*_{p}}\tfun{\eps}{\eps} ~~~
+        \typeJC{e^*_{b}}\tfun{\eps}{\eps} ~~~
+        \wbr{i} \not\in {e^*_{c}},{e^*_{b}},{e^*_{p}} ~~~
+        \wbrif{i} \not\in {e^*_{c}},{e^*_{b}},{e^*_{p}}}
+  {\typeJC{\wfor{e^*_{i}}{e^*_{c}}{e^*_{p}}{e^*_{b}}}     {\tfun{\eps}{\eps}}}
+
+\ir{D-For}
+  {~}
+  {\wsteps
+    {\wci{:\wfor{e^*_{i}}{e^*_{c}}{e^*_{p}}{e^*_{b}};\ e^*}}
+    {\wci{:e^*_{i};~\wloop{(e^*_{c};~\wif{({e^*_{b};~e^*_{p};~\wbr{0}})}{(\eps)})};\ e^*}}}
+
+
+% \ir{T-Rpt}
+%   {\typeJC{e^*_{cond}}\tfun{\eps}{\msf{i32}} ~~~~~~
+%         \typeJC{e^*_{post}}\tfun{\eps}{\eps} ~~~~~~
+%         \typeJC{e^*_{body}}\tfun{\eps}{\eps}}
+%   {\typeJC{\wrpt{e^*_{cond}}{e^*_{post}}{e^*_{body}}}     {\tfun{\eps}{\eps}}}
+
+% \ir{D-For-Init}
+%   {\ }
+%   {\wsteps
+%     {\wci{:}~\wfor{e^*_{i}}{e^*_{c}}{e^*_{p}}{e^*_{b}};\ e^*}
+%     {\wci{:}~e^*_{i};\ \wrpt{e^*_{c}}{e^*_{p}}{e^*_{b}};\ e^*}}
+    
+% \ir{D-Rpt}
+%   {{    \brc{C~\with~\wcs{:}~\eps;   ~\wci{:}~\ e^*_c}
+%             \overset{\boldsymbol{*}}{\boldsymbol{\mapsto}}
+%         \brc{\overline{C}~\with~\wcs{:}~n;             ~\wci{:}~\eps}} ~~~~~~
+%         n \neq 0}
+%   {\wsteps
+%     {C~\with~\wci{:}~\wrpt{e^*_{c}}{e^*_{p}}{e^*_{b}};\ e^*}
+%     {C'~\with~\wci{:}~e^*_{b};\ e^*_{p};\ \wrpt{e^*_{c}}{e^*_{p}}{e^*_{b}};\ e^*}}
+    
+% \ir{D-Rpt-End}
+%   {{    \brc{C~\with~\wcs{:}~\eps;   ~\wci{:}~\ e^*_c}
+%             \overset{\boldsymbol{*}}{\boldsymbol{\mapsto}}
+%         \brc{\overline{C}~\with~\wcs{:}~n;             ~\wci{:}~\eps}} ~~~~~~
+%         n = 0}
+%   {\wsteps
+%     {C~\with~\wci{:}~\wrpt{e^*_{c}}{e^*_{p}}{e^*_{b}};\ e^*}
+%     {C'~\with~\wci{:}~e^*}}
+    
 \end{mathpar}
 
 Part 3:
 
+The idea here is that, once we hit a $\msf{try}$ instruction, we save our current configuration, and try to step the $e^*_{try}$ instructions, propagating changes to memory and locals to the saved configuration.
+
+If we finish the instructions, then we just carry on from our saved configuration, with the propagated changes. Else, if we hit a $\msf{raise}$, we pop a number from the stack and push it to our saved configuration, then run $e^*_{catch}$. Finally, if we hit any branches, we need to get rid of our $\msf{trying}$ instruction, so we can let the branch propagate. This is done similarly to when we finish the $e^*_{try}$ instructions.
+
+\newcommand{\wtrying}[2]{\msf{trying}({#1},{#2})}
 \begin{mathpar}
-% Your answer here
+
+\ir{T-Try}
+  {\typeJC{e^*_{try}}\tfun{\eps}{\eps} ~~~~~~
+        \typeJC{e^*_{catch}}\tfun{\msf{i32}}{\eps} }
+  {\typeJC{\wtry{e^*_{try}}{e^*_{catch}}}     {\tfun{\eps}{\eps}}}
+
+\ir{T-Raise}
+  {~}
+  {\typeJC{\wraise}     {\tfun{\msf{i32}}{\msf{i32}}}}
+
+\ir{T-Trying}
+  {~}
+  {\typeJC{\wtrying{e^*}{C}}     {\tfun{\eps}{\eps}}}
+
+\ir{D-Try}
+  {~}
+  {\wsteps
+    {C~\with~\wci{:\wtry{e^*_{try}}{e^*_{catch}};~e^*}}
+    {C'~\with~\wci{:}~\wtrying{e^*_{try}}{C}}}
+
+\ir{D-TS}
+  {\wsteps
+    {C'~\with~\wci{:e^*_{try}}}
+    {C''~\with~\wci{:e'^*_{try}}}}
+  {\wsteps
+    {C'~\with~\wci{:}~\wtrying{e^*_{try}}{C}}
+    {C''~\with~\wci{:}~\wtrying{e^*_{try}}{
+        \brc{C~\with~\wcm{:C''.\wcm{}};~\wcl{:C''.\wcl{}}}    }}}
+    %{\wcm{:\_};~\wcl{:\_};~\wci{:\wtrying{C}}}
+    %{\wcm{:C'.\wcm{}};~\wcl{:C'.\wcl{}};~\wci{:\wtrying{C'}}}
+
+\ir{D-Try-Done}
+  {\brc{C~\with~\wci{:\wtry{e^*_{try}}{e^*_{catch}};~e^*}}}
+  {\wsteps
+    {C'~\with~\wci{:}~\wtrying{\eps}{C}}
+    {C~\with~\wci{: e^*}}}
+
+\ir{D-Try-Raise}
+  {\brc{C~\with~\wci{:\wtry{e^*_{try}}{e^*_{catch}};e^*};~\wcs{:n^*}}}
+  {\wsteps
+    {C'~\with~\wci{:\wtrying{\wraise; e_{t}^*}{C}};~\wcs{:n_{t}^*,n'}}
+    {C~\with~\wci{:e^*_{catch};e^*};~\wcs{:n^*;n'}}}
+
+\ir{D-Try-Branch}
+  {\brc{C~\with~\wci{:\wtry{e^*_{try}}{e^*_{catch}};~e^*}}}
+  {\wsteps
+    {C'~\with~\wci{:\wtrying{\wbr{i}; e_{t}^*}{C}}}
+    {C~\with~\wci{:\wbr{i};e^*}}}
+
 \end{mathpar}
 
 \problem{Problem 3}
@@ -98,16 +180,37 @@ Part 3:
 Part 1:
 
 \begin{enumerate}
-\item \textbf{Undefined behavior:} % Your answer here
-\item \textbf{Private function call:} % Your answer here
+\item \textbf{Undefined behavior:} No, this cannot happen. Since we know $\typeJC{C}{\tau^*}$ and the type judgement for configurations (T-Config) makes no references to memory, we have $\typeJC{C'}{\tau^*}$ even if the attacker can alter arbitrary memory values.
+\item \textbf{Private function call:} No, this cannot happen. Since the function is never called in in $C$, it will also never called in $C'$. The attacker may be able to change the execution of the program, for instance if there is a branch that decides based on a value in memory, but it would only execute instructions that were originally present in the program.
 \end{enumerate}
 
 Part 2:
 
 \begin{enumerate}
-\item \textbf{Undefined behavior:} % Your answer here
-\item \textbf{Private function call:} % Your answer here
-\end{enumerate}
+\item \textbf{Undefined behavior:} Again, for the same reason as above, if we have $\typeJC{C}{\tau^*}$ then we also have $\typeJC{C'}{\tau^*}$ despite the changes in memory.
+\item \textbf{Private function call:} Yes, this is possible. Consider the program below. It would like to call function $\msf{\$target}$, so it writes 1 – the index of the desired function – to memory, and later reads it and uses it in the $\msf{call\_indirect}$. If, however, the memory at address 242 gets changed from 1 to 0 by the attacker, then $\msf{\$secret}$ will be called instead, which is undesirable.
 
+\begin{lstlisting}[frame=single]
+(module
+  (func $secret (param $x i32) (result i32)     ;; index 0 
+    (get_local $x)
+    (i32.const 1)
+    (i32.add))
+
+  (func $target (param $x i32) (result i32)     ;; index 1
+    (get_local $x)
+    (i32.const 1)
+    (i32.sub))
+
+  (func $func (result i32)                      ;; index 2
+    (i32.const 100)
+    (i32.const 242)
+    (i32.const 1)
+    (i32.store)
+    (i32.const 242)
+    (i32.load)
+    (call_indirect (param i32) (result i32))
+\end{lstlisting}
+\end{enumerate}
 
 \end{document}
